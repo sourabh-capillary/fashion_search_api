@@ -1,0 +1,13 @@
+# OpenAI API Configuration
+OPENAI_API_KEY=your_openai_api_key_here
+
+# Anthropic API Configuration (optional, has fallback)
+ANTHROPIC_API_KEY=your_anthropic_api_key_here
+
+# AWS Configuration
+AWS_REGION=us-east-1
+S3_BUCKET_NAME=hacka-image-bucket
+
+# OpenSearch Configuration
+OPENSEARCH_ENDPOINT=your_opensearch_endpoint_here
+OPENSEARCH_INDEX=products

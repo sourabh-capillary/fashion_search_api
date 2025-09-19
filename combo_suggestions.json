@@ -1,0 +1,72 @@
+{
+  "total_users": 1,
+  "total_products": 4,
+  "user_combos": [
+    {
+      "user_id": "46382",
+      "total_products_available": 8,
+      "combinations": [
+        {
+          "combo_id": "combo_001",
+          "combo_name": "Earthy Minimalist",
+          "products": [
+            {
+              "product_id": "8909230797297",
+              "role": "top",
+              "styling_notes": "Pair this light V-neck full sleeve top with a neutral bottom for a minimalist look.",
+              "s3_url": "https://hacka-image-bucket.s3.us-east-1.amazonaws.com/images/8909230797297.png"
+            },
+            {
+              "product_id": "8909230868843",
+              "role": "accessory",
+              "styling_notes": "Use this earthy striped collared top as an accessory layer, wearing it open over the V-neck for a relaxed, layered look.",
+              "s3_url": "https://hacka-image-bucket.s3.us-east-1.amazonaws.com/images/8909230868843.png"
+            },
+            {
+              "product_id": "8905968463985",
+              "role": "bottom",
+              "styling_notes": "Complement the tops with these dark formal tailored trousers to add a touch of sophistication to the casual tops.",
+              "s3_url": "https://hacka-image-bucket.s3.us-east-1.amazonaws.com/images/8905968463985.png"
+            }
+          ],
+          "style_description": "A perfect blend of minimalist casual and formal elements, this combination uses layering and color contrast to create a sophisticated yet relaxed look.",
+          "occasion": "Smart Casual Outing",
+          "color_palette": "Light, Earthy, Dark",
+          "confidence_score": 0.9
+        },
+        {
+          "combo_id": "combo_002",
+          "combo_name": "Bright & Sporty Kid",
+          "products": [
+            {
+              "product_id": "8909044565488",
+              "role": "top",
+              "styling_notes": "This contrasting graphic full sleeve top adds a sporty vibe perfect for energetic kids.",
+              "s3_url": "https://hacka-image-bucket.s3.us-east-1.amazonaws.com/images/8909044565488.jpg"
+            },
+            {
+              "product_id": "8905903156750",
+              "role": "bottom",
+              "styling_notes": "Pair with bright striped shorts or jeans for a fun, vibrant look.",
+              "s3_url": "https://hacka-image-bucket.s3.us-east-1.amazonaws.com/images/8905903156750.png"
+            },
+            {
+              "product_id": "8905903156750",
+              "role": "accessory",
+              "styling_notes": "Add a colorful cap or a playful backpack to complete the streetwear look.",
+              "s3_url": "https://hacka-image-bucket.s3.us-east-1.amazonaws.com/images/8905903156750.png"
+            }
+          ],
+          "style_description": "A playful and vibrant mix for kids, combining bright colors and sporty graphics to create an energetic ensemble.",
+          "occasion": "Playdate or Casual Outing",
+          "color_palette": "Bright, Contrasting",
+          "confidence_score": 0.85
+        }
+      ],
+      "combo_summary": {
+        "total_combos": 2,
+        "avg_confidence": 0.875
+      }
+    }
+  ]
+}
