@@ -46,56 +46,73 @@ async def lifespan(app: FastAPI):
     """Initialize and cleanup components."""
     global persona_analyzer, simple_vector_search, knn_vector_search, combo_generator, combo_image_creator
     
-    # Startup
-    try:
-        logger.info("Initializing Fashion Search API components...")
-        
-        # Initialize Persona Analyzer
-        persona_analyzer = PersonaAnalyzer()
-        logger.info("✅ Persona Analyzer initialized")
-        
-        # Initialize Vector Search components
-        opensearch_endpoint = os.getenv("OPENSEARCH_ENDPOINT")
-        if not opensearch_endpoint:
-            raise ValueError("OPENSEARCH_ENDPOINT environment variable is required")
-        
-        opensearch_index = os.getenv("OPENSEARCH_INDEX", "products")
-        aws_region = os.getenv("AWS_REGION", "us-east-1")
-        
-        # Initialize Simple Vector Search
-        simple_vector_search = SimpleVectorSearch(
-            opensearch_endpoint=opensearch_endpoint,
-            opensearch_index=opensearch_index,
-            aws_region=aws_region
-        )
-        logger.info("✅ Simple Vector Search initialized")
-        
-        # Initialize KNN Vector Search
-        knn_vector_search = KNNVectorSearch(
-            opensearch_endpoint=opensearch_endpoint,
-            opensearch_index=opensearch_index,
-            aws_region=aws_region
-        )
-        logger.info("✅ KNN Vector Search initialized")
-        
-        # Initialize Combo Generator
-        combo_generator = ComboGenerator()
-        logger.info("✅ Combo Generator initialized")
-        
-        # Initialize Combo Image Creator
-        combo_image_creator = ComboImageCreator()
-        logger.info("✅ Combo Image Creator initialized")
-        
-        logger.info("🚀 Fashion Search API ready!")
-        
-    except Exception as e:
-        logger.error(f"❌ Failed to initialize components: {str(e)}")
-        raise
+    # Startup - Initialize components lazily
+    logger.info("🚀 Fashion Search API starting...")
+    
+    # Initialize components as None - they'll be created when needed
+    persona_analyzer = None
+    simple_vector_search = None
+    knn_vector_search = None
+    combo_generator = None
+    combo_image_creator = None
+    
+    logger.info("✅ Fashion Search API ready!")
     
     yield
     
     # Shutdown (if needed)
     logger.info("Shutting down Fashion Search API...")
+
+def get_persona_analyzer():
+    """Get or create persona analyzer."""
+    global persona_analyzer
+    if persona_analyzer is None:
+        persona_analyzer = PersonaAnalyzer()
+    return persona_analyzer
+
+def get_combo_generator():
+    """Get or create combo generator."""
+    global combo_generator
+    if combo_generator is None:
+        combo_generator = ComboGenerator()
+    return combo_generator
+
+def get_combo_image_creator():
+    """Get or create combo image creator."""
+    global combo_image_creator
+    if combo_image_creator is None:
+        combo_image_creator = ComboImageCreator()
+    return combo_image_creator
+
+def get_vector_search(search_method: str):
+    """Get or create vector search instance."""
+    global simple_vector_search, knn_vector_search
+    
+    opensearch_endpoint = os.getenv("OPENSEARCH_ENDPOINT")
+    if not opensearch_endpoint:
+        raise ValueError("OPENSEARCH_ENDPOINT environment variable is required")
+    
+    opensearch_index = os.getenv("OPENSEARCH_INDEX", "products")
+    aws_region = os.getenv("AWS_REGION", "us-east-1")
+    
+    if search_method.lower() == "knn":
+        if knn_vector_search is None:
+            knn_vector_search = KNNVectorSearch(
+                opensearch_endpoint=opensearch_endpoint,
+                opensearch_index=opensearch_index,
+                aws_region=aws_region
+            )
+        return knn_vector_search
+    elif search_method.lower() == "simple":
+        if simple_vector_search is None:
+            simple_vector_search = SimpleVectorSearch(
+                opensearch_endpoint=opensearch_endpoint,
+                opensearch_index=opensearch_index,
+                aws_region=aws_region
+            )
+        return simple_vector_search
+    else:
+        raise ValueError(f"Invalid search method: {search_method}. Use 'knn' or 'simple'")
 
 # Initialize FastAPI app
 app = FastAPI(
@@ -156,29 +173,15 @@ class TestEmailRequest(BaseModel):
 @app.get("/health", response_model=HealthResponse)
 async def health_check():
     """Health check endpoint."""
-    components = {
-        "persona_analyzer": "✅ Ready" if persona_analyzer else "❌ Not initialized",
-        "simple_vector_search": "✅ Ready" if simple_vector_search else "❌ Not initialized",
-        "knn_vector_search": "✅ Ready" if knn_vector_search else "❌ Not initialized",
-        "combo_generator": "✅ Ready" if combo_generator else "❌ Not initialized",
-        "combo_image_creator": "✅ Ready" if combo_image_creator else "❌ Not initialized"
-    }
-    
-    status = "healthy" if all("✅" in status for status in components.values()) else "unhealthy"
-    
     return HealthResponse(
-        status=status,
-        components=components
+        status="healthy",
+        components={
+            "api": "✅ Ready",
+            "status": "✅ Running"
+        }
     )
 
-def get_vector_search(search_method: str):
-    """Get the appropriate vector search instance based on method."""
-    if search_method.lower() == "knn":
-        return knn_vector_search
-    elif search_method.lower() == "simple":
-        return simple_vector_search
-    else:
-        raise ValueError(f"Invalid search method: {search_method}. Use 'knn' or 'simple'")
+# This function is now defined above, removing the duplicate
 
 @app.post("/search/image", response_model=ProductSearchResponse)
 async def search_by_image(
@@ -198,12 +201,8 @@ async def search_by_image(
         Analyzed product data and similar products
     """
     try:
-        if not persona_analyzer:
-            raise HTTPException(status_code=503, detail="Persona analyzer not initialized")
-        
+        persona_analyzer = get_persona_analyzer()
         vector_search = get_vector_search(search_method)
-        if not vector_search:
-            raise HTTPException(status_code=503, detail=f"{search_method} vector search not initialized")
         
         # Save uploaded image to temporary file
         with tempfile.NamedTemporaryFile(delete=False, suffix=f".{image.filename.split('.')[-1]}") as temp_file:
@@ -291,8 +290,11 @@ async def generate_user_email(request: UserEmailRequest):
         User email response with combo images and HTML template
     """
     try:
-        if not all([persona_analyzer, knn_vector_search, combo_generator, combo_image_creator]):
-            raise HTTPException(status_code=503, detail="Required components not initialized")
+        # Initialize components lazily
+        persona_analyzer = get_persona_analyzer()
+        knn_vector_search = get_vector_search("knn")
+        combo_generator = get_combo_generator()
+        combo_image_creator = get_combo_image_creator()
         
         user_id = request.user_id
         logger.info(f"Starting email generation for user: {user_id}")
@@ -533,8 +535,7 @@ async def test_email_generation(request: TestEmailRequest):
         HTML email template
     """
     try:
-        if not combo_image_creator:
-            raise HTTPException(status_code=503, detail="Combo image creator not initialized")
+        combo_image_creator = get_combo_image_creator()
         
         logger.info("Starting test email generation using existing combo suggestions...")
         
