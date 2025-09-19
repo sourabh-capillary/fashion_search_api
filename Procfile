@@ -1,1 +1,1 @@
-web: python fashion_search_api.py
+web: python test_app.py
